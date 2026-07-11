@@ -3856,9 +3856,15 @@ setTimeout(function() {
 .momen-unmute.on{color:var(--or);border-color:rgba(217,90,43,.4)}
 
 @media(max-width:900px){
-  .momen-section{grid-template-columns:1fr;grid-template-rows:1fr 2fr 1fr;height:100svh}
-  .momen-panel+.momen-panel{border-left:none;border-top:1px solid rgba(255,255,255,.07)}
-  .momen-word{font-size:clamp(22px,7vw,44px)}
+  /* stack vertically, no forced full-height (kills the empty black gaps) */
+  .momen-section{grid-template-columns:1fr;grid-template-rows:none;grid-auto-rows:auto;height:auto;padding:52px 0 68px;gap:18px;justify-items:center;align-content:start}
+  .momen-panel+.momen-panel{border:none}
+  /* left & right: compact photo bands with centered text */
+  .momen-left,.momen-right{width:min(92vw,420px);aspect-ratio:16/8;border-radius:16px}
+  /* MIDDLE: video stays PORTRAIT 9:16 on phone & tablet (video is 9:16 → no crop) */
+  .momen-mid{height:min(74vh,640px);aspect-ratio:9/16;max-width:92vw;border-radius:18px}
+  .momen-mid-overlay{padding:0 16px 22px;gap:12px}
+  .momen-word{font-size:clamp(24px,7.5vw,40px)}
 }
 
 /* ═══════════════════════════════════════════════════════════
