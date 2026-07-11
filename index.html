@@ -3867,6 +3867,27 @@ setTimeout(function() {
   .momen-word{font-size:clamp(24px,7.5vw,40px)}
 }
 
+/* ── Visit & Experience: layout HP (menang atas definisi ganda di atas) ── */
+@media(max-width:900px){
+  /* VISIT — peta di atas, 4 kartu info di bawah (2 per baris) */
+  .visit-grid{display:grid;grid-template-columns:1fr;gap:22px;margin-top:36px}
+  .visit-right{order:-1}
+  .visit-info{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .visit-card{flex-direction:column;gap:10px;padding:16px}
+  .visit-icon{margin-top:0}
+  .visit-map{height:300px}
+
+  /* EXPERIENCE — poin bisa digeser ke samping di atas, foto di bawah */
+  .exp-grid{display:grid;grid-template-columns:1fr;gap:26px;align-items:start}
+  .exp-list{flex-direction:row;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;padding-bottom:10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+  .exp-list::-webkit-scrollbar{display:none}
+  .exp-item{flex:0 0 80%;scroll-snap-align:center;border:1px solid var(--gl);border-radius:14px;padding:20px;background:var(--bk2)}
+  .exp-item:hover,.exp-item.active{padding-left:20px}
+}
+@media(max-width:420px){
+  .visit-info{grid-template-columns:1fr}
+}
+
 /* ═══════════════════════════════════════════════════════════
    STORY SECTION — FILM ROLL REBUILD
 ═══════════════════════════════════════════════════════════ */
