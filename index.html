@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Jayaraya Coffee · Pastry · Roastery — Coffee · Pastry · Roastery di jantung Maros, Sulawesi Selatan. Jayaraya Untuk Semua.">
+<meta name="description" content="JAYARAYA Coffee · Pastry · Roastery — Coffee · Pastry · Roastery di jantung Maros, Sulawesi Selatan. JAYARAYA Untuk Semua.">
 <title>JAYARAYA Coffee & Pastry</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -659,6 +659,12 @@ footer { background: var(--bk2); padding: 72px 5% 40px; border-top: 1px solid va
 .order-type-btns { display: flex; gap: 8px; margin-bottom: 16px; }
 .order-type-choice { flex: 1; padding: 10px; border-radius: 100px; font-family: 'Manrope', sans-serif; font-size: 12px; font-weight: 700; border: 1px solid var(--gl); background: transparent; color: var(--gyl); cursor: pointer; transition: all .2s; }
 .order-type-choice.active { background: var(--or); border-color: var(--or); color: var(--wh); }
+.cart-outlet { margin-bottom: 14px; }
+.cart-outlet .order-type-btns { margin-bottom: 6px; }
+.cart-outlet-hint { font-size: 11px; line-height: 1.4; color: var(--or); font-weight: 600; }
+.cart-delivery-note { display: none; font-size: 12px; line-height: 1.5; color: var(--gyl); background: rgba(217,90,43,.08); border: 1px solid rgba(217,90,43,.25); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.cart-delivery-note b { color: var(--or); }
+.menu-hdr-hint { font-size: 12px; font-weight: 600; color: var(--gy); background: var(--bk2); border: 1px solid var(--gl); border-radius: 100px; padding: 9px 16px; white-space: nowrap; }
 .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .cart-total-label { font-size: 12px; font-weight: 700; color: var(--gy); letter-spacing: .5px; text-transform: uppercase; }
 .cart-total-num { font-size: 26px; font-weight: 800; color: var(--wh); }
@@ -1223,8 +1229,16 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <div class="order-type-label">Tipe Order</div>
     <div class="order-type-btns">
       <button class="order-type-choice active" id="pickupBtn" onclick="setOrderType('pickup')">🏪 Pickup</button>
-      <button class="order-type-choice" id="deliveryBtn" onclick="setOrderType('delivery');openDeliveryModal()">🛵 Delivery</button>
+      <button class="order-type-choice" id="deliveryBtn" onclick="setOrderType('delivery')">🛵 Delivery</button>
     </div>
+    <!-- Outlet chooser — muncul saat Pickup -->
+    <div class="cart-outlet" id="cartOutletRow">
+      <div class="order-type-label">Pilih Outlet</div>
+      <div class="order-type-btns" id="cartOutletBtns"></div>
+      <div class="cart-outlet-hint" id="cartOutletHint"></div>
+    </div>
+    <!-- Catatan Delivery -->
+    <div class="cart-delivery-note" id="cartDeliveryNote">🛵 Diantar via <b>JAYARAYA DELIVERY</b>. Alamat &amp; ongkir dikonfirmasi lewat WhatsApp.</div>
     <div class="cart-total-row">
       <span class="cart-total-label">Total</span>
       <span class="cart-total-num" id="cartTotal">Rp 0</span>
@@ -1237,42 +1251,6 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
   🛒<span class="cart-badge" id="cartBadge">0</span>
 </button>
 
-<!-- QRIS PAYMENT MODAL -->
-<div class="pay-modal" id="payModal" role="dialog" aria-modal="true" aria-labelledby="payTitle">
-  <div class="pay-backdrop" id="payBackdrop"></div>
-  <div class="pay-panel">
-    <button class="pay-close" id="payClose" aria-label="Tutup">&times;</button>
-    <div class="pay-eyebrow">Pembayaran · QRIS</div>
-    <div class="pay-title" id="payTitle">Selesaikan pesananmu</div>
-
-    <div class="pay-summary" id="paySummary"></div>
-    <div class="pay-total-row"><span>Total</span><span class="pay-total" id="payTotal">Rp 0</span></div>
-
-    <div class="pay-outlet">
-      <div class="pay-outlet-lbl">Kirim pesanan ke outlet</div>
-      <div class="pay-outlet-btns">
-        <button class="pay-outlet-btn active" onclick="selectPayOutlet(this,'62882022880604')">Pettarani</button>
-        <button class="pay-outlet-btn" onclick="selectPayOutlet(this,'62882022908968')">Ratulangi</button>
-      </div>
-    </div>
-
-    <div class="pay-qris" id="payQris">
-      <!-- EDIT: taruh gambar QRIS di Assets/Payment/qris.jpg (atau .png) -->
-      <img src="Assets/Payment/qris.jpg" alt="QRIS Jayaraya Coffee" id="payQrisImg"
-           onerror="this.onerror=null;this.src='Assets/Payment/qris.png';this.addEventListener('error',function(){document.getElementById('payQris').classList.add('pay-qris-missing');this.style.display='none';});">
-      <div class="pay-qris-fallback">Letakkan gambar QRIS di<br><b>Assets/Payment/qris.jpg</b></div>
-    </div>
-
-    <div class="pay-steps">
-      <span><b>1.</b> Scan QRIS &amp; bayar sesuai total</span>
-      <span><b>2.</b> Screenshot bukti bayar</span>
-      <span><b>3.</b> Kirim via WhatsApp</span>
-    </div>
-
-    <button class="pay-send" onclick="sendOrderWA(true)">Sudah bayar — Kirim pesanan &amp; bukti via WhatsApp</button>
-    <button class="pay-later" onclick="sendOrderWA(false)">Pesan dulu, bayar nanti</button>
-  </div>
-</div>
 
 <!-- ============================================================
   NAVIGATION
@@ -1281,7 +1259,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
 <nav id="mainNav">
   <div class="nav-inner">
     <!-- EDIT: nama brand -->
-    <div class="nav-logo"><img src="Assets/Brand/logo-cropped.png" alt="Jayaraya" style="height:36px;width:auto;display:block;"></div>
+    <div class="nav-logo"><img src="Assets/Brand/logo-cropped.png" alt="JAYARAYA" style="height:36px;width:auto;display:block;"></div>
     <div class="nav-links">
       <button class="nav-link" onclick="scrollToSection('story')">Cerita</button>
       <button class="nav-link" onclick="scrollToSection('kolaborasi')">Komunitas</button>
@@ -1337,7 +1315,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <div class="hero-bottom">
       <!-- EDIT: deskripsi singkat brand -->
       <p class="hero-desc">
-        <strong>Jayaraya Coffee & Pastry</strong> lahir dari keinginan sederhana —
+        <strong><b>JAYARAYA</b> Coffee & Pastry</strong> lahir dari keinginan sederhana —
         kopi yang jujur, suasana yang cozy, dan tempat yang terasa milik semua kalangan di Maros.
       </p>
       <div>
@@ -1359,14 +1337,14 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <span class="marquee-item">Roastery <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Pastry <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">#jayarayaselalu <span class="marquee-dot">✦</span></span>
-    <span class="marquee-item">Jayaraya Untuk Semua <span class="marquee-dot">✦</span></span>
+    <span class="marquee-item"><b>JAYARAYA</b> Untuk Semua <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Maros, Sulawesi <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Est. 2024 <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Coffee <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Roastery <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Pastry <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">#jayarayaselalu <span class="marquee-dot">✦</span></span>
-    <span class="marquee-item">Jayaraya Untuk Semua <span class="marquee-dot">✦</span></span>
+    <span class="marquee-item"><b>JAYARAYA</b> Untuk Semua <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Maros, Sulawesi <span class="marquee-dot">✦</span></span>
     <span class="marquee-item">Est. 2024 <span class="marquee-dot">✦</span></span>
   </div>
@@ -1384,7 +1362,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
       <div class="story-tag">Perjalanan Kami</div>
       <h2 class="story-headline">Dari satu kedai<br>sederhana, jadi<br><span>rumah untuk semua.</span></h2>
       <p class="story-body">
-        <strong style="color:var(--wh)">Jayaraya bukan sekadar coffee shop.</strong> Ini cerita tentang mimpi yang dimulai
+        <strong style="color:var(--wh)"><b>JAYARAYA</b> bukan sekadar coffee shop.</strong> Ini cerita tentang mimpi yang dimulai
         dari percakapan kecil, secangkir kopi, dan keyakinan bahwa Maros layak punya
         tempat ngopi yang benar-benar terbuka untuk semua kalangan.
       </p>
@@ -1421,7 +1399,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <!-- Top: Headline + body -->
     <div class="sp-header fade-up">
       <h2 class="sp-headline" data-cms="sp-headline">Kami terus<br>bertumbuh<br>karena kalian</h2>
-      <p class="sp-body">Jayaraya tumbuh bukan karena iklan, tapi karena orang-orang yang setia datang, menceritakan hal-hal baik di tempat ini, dan menjadikan Jayaraya sebagai bagian dari harinya.</p>
+      <p class="sp-body"><b>JAYARAYA</b> tumbuh bukan karena iklan, tapi karena orang-orang yang setia datang, menceritakan hal-hal baik di tempat ini, dan menjadikan <b>JAYARAYA</b> sebagai bagian dari harinya.</p>
     </div>
 
     <!-- 3 Feature cards -->
@@ -1429,7 +1407,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
       <div class="sp-card">
         <div class="sp-card-icon">🏠</div>
         <div class="sp-card-title">Rumah Kedua</div>
-        <p class="sp-card-body">Dari pelajar sampai pekerja remote, Jayaraya adalah tempat di mana semua kalangan merasa nyaman bersama-sama tanpa tekanan.</p>
+        <p class="sp-card-body">Dari pelajar sampai pekerja remote, <b>JAYARAYA</b> adalah tempat di mana semua kalangan merasa nyaman bersama-sama tanpa tekanan.</p>
       </div>
       <div class="sp-card">
         <div class="sp-card-icon">🤝</div>
@@ -1580,7 +1558,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
           <div class="exp-num">01</div>
           <div>
             <div class="exp-item-title">Kopi Aren Jaya</div>
-            <div class="exp-item-desc">Signature drink kami — espresso bertemu aren lokal. Bold, smooth, dan sudah jadi identitas Jayaraya sejak hari pertama.</div>
+            <div class="exp-item-desc">Signature drink kami — espresso bertemu aren lokal. Bold, smooth, dan sudah jadi identitas <b>JAYARAYA</b> sejak hari pertama.</div>
           </div>
         </div>
         <div class="exp-item">
@@ -1607,7 +1585,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
       </div>
       <div class="exp-swiss fade-up delay-2">
         <figure class="exp-sw exp-sw-a">
-          <img src="Assets/Experience/02.jpg" alt="Suasana Jayaraya" loading="lazy" decoding="async"
+          <img src="Assets/Experience/02.jpg" alt="Suasana JAYARAYA" loading="lazy" decoding="async"
                onerror="this.parentElement.classList.add('exp-sw-fallback');this.style.display='none'">
         </figure>
         <figure class="exp-sw exp-sw-b">
@@ -1615,11 +1593,11 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
                onerror="this.parentElement.classList.add('exp-sw-fallback');this.style.display='none'">
         </figure>
         <figure class="exp-sw exp-sw-c">
-          <img src="Assets/Experience/03.jpg" alt="Detail Jayaraya" loading="lazy" decoding="async"
+          <img src="Assets/Experience/03.jpg" alt="Detail JAYARAYA" loading="lazy" decoding="async"
                onerror="this.parentElement.classList.add('exp-sw-fallback');this.style.display='none'">
         </figure>
         <figure class="exp-sw exp-sw-d">
-          <img src="Assets/Experience/04.jpg" alt="Momen di Jayaraya" loading="lazy" decoding="async"
+          <img src="Assets/Experience/04.jpg" alt="Momen di JAYARAYA" loading="lazy" decoding="async"
                onerror="this.parentElement.classList.add('exp-sw-fallback');this.style.display='none'">
         </figure>
         <div class="exp-sw-cap"><span>Est. 2024</span><span>Maros · Sulawesi</span></div>
@@ -1638,12 +1616,9 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <div class="menu-board-order-hdr fade-up">
       <div>
         <div class="section-tag">Menu</div>
-        <h2 class="section-title" style="margin-bottom:0">Order dari sini,<br><span class="accent">pickup atau delivery.</span></h2>
+        <h2 class="section-title" style="margin-bottom:0">Pilih menu,<br><span class="accent">masukkan ke keranjang.</span></h2>
       </div>
-      <div class="order-toggle">
-        <button class="otype-btn active" id="menuPickup" onclick="setOrderType('pickup');syncMenuToggle('pickup')">Pickup</button>
-        <button class="otype-btn" id="menuDelivery" onclick="setOrderType('delivery');syncMenuToggle('delivery');openDeliveryModal()">Delivery</button>
-      </div>
+      <div class="menu-hdr-hint">Pickup atau delivery dipilih di keranjang 🛒</div>
     </div>
     <!-- 2 category CTAs → open modal -->
     <div class="menu-cta-grid" id="menuCTAs"></div>
@@ -1685,7 +1660,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
   <div class="merch-editorial-inner">
     <div class="merch-header fade-up">
       <div class="section-tag">JYRY Club</div>
-      <h2 class="section-title">Bawa pulang<br><span class="accent">semangat Jayaraya.</span></h2>
+      <h2 class="section-title">Bawa pulang<br><span class="accent">semangat <b>JAYARAYA</b>.</span></h2>
       <p class="section-sub">Merchandise resmi dari <strong style="color:var(--or)">JYRY Club</strong> — koleksi untuk kamu yang #jayarayaselalu di mana aja.</p>
       <a href="https://instagram.com/jyry.club" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;font-weight:700;color:var(--or);text-decoration:none;border:1px solid rgba(217,90,43,0.3);padding:8px 18px;border-radius:100px;transition:all .2s" onmouseover="this.style.background='rgba(217,90,43,0.1)'" onmouseout="this.style.background='transparent'">@jyry.club &#8599;</a>
     </div>
@@ -1705,9 +1680,9 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
     <!-- INFO -->
     <div class="booth-info">
       <div class="booth-tag">Kolaborasi &amp; Booth</div>
-      <h2 class="booth-headline">Hadirkan Jayaraya<br><span style="color:var(--or)">di eventmu.</span></h2>
+      <h2 class="booth-headline">Hadirkan <b>JAYARAYA</b><br><span style="color:var(--or)">di eventmu.</span></h2>
       <p class="booth-sub">
-        Jayaraya siap hadir di event, bazaar, festival, dan acara korporat kamu.
+        <b>JAYARAYA</b> siap hadir di event, bazaar, festival, dan acara korporat kamu.
         Dari booth kopi hingga catering — kami bawa pengalaman yang berkesan.
       </p>
       <div class="booth-points">
@@ -1863,7 +1838,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
   <div class="footer-inner">
     <div class="footer-grid">
       <div>
-        <img src="Assets/Brand/logo-white-cropped.png" alt="Jayaraya" style="height:32px;width:auto;display:block;margin-bottom:8px;filter:brightness(1);">
+        <img src="Assets/Brand/logo-white-cropped.png" alt="JAYARAYA" style="height:32px;width:auto;display:block;margin-bottom:8px;filter:brightness(1);">
         <!-- EDIT: deskripsi brand di footer -->
         <p class="footer-desc" style="line-height:1.9;">Coffee · Pastry · Roastery<br><br>Di jantung Maros, Sulawesi Selatan.<br>Tempat ngopi yang jujur, cozy,<br>dan untuk semua kalangan.</p>
         <span class="footer-tagline">#jayarayaselalu ☀️</span>
@@ -1894,7 +1869,7 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
           <li><a href="https://instagram.com/jayarayacoffee" target="_blank">@jayarayacoffee</a></li>
           <li><a href="https://instagram.com/jyry.club" target="_blank">@jyry.club (merch)</a></li>
           <li><a href="https://api.whatsapp.com/send/?phone=62882022880604&text&type=phone_number&app_absent=0" target="_blank">WhatsApp</a></li>
-          <li><a href="https://maps.google.com/?q=Jayaraya+Coffee+Maros" target="_blank">Google Maps</a></li>
+          <li><a href="https://maps.google.com/?q=JAYARAYA+Coffee+Maros" target="_blank">Google Maps</a></li>
         </ul>
       </div>
     </div>
@@ -1917,7 +1892,11 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
 const CONFIG = {
   WA_NUMBER: '62882022880604',  // EDIT: nomor WA Outlet 1 (Pettarani) — default
   WA_NUMBER_2: '62882022908968',  // EDIT: nomor WA Outlet 2 (Ratulangi)
-  BRAND_NAME: 'Jayaraya Coffee · Pastry · Roastery',  // EDIT: nama brand
+  DELIVERY_NUMBER: '6281284400097',  // EDIT: nomor JAYARAYA DELIVERY (sementara OmKurir Maros)
+  DELIVERY_NAME: 'JAYARAYA DELIVERY',
+  OUTLET_PETTARANI: '62882022880604',
+  OUTLET_RATULANGI: '62882022908968',
+  BRAND_NAME: 'JAYARAYA Coffee · Pastry · Roastery',  // EDIT: nama brand
   PICKUP_TIME: '15 menit',  // EDIT: estimasi pickup
 };
 
@@ -1927,15 +1906,21 @@ const CONFIG = {
 let cart = [];
 let orderType = 'pickup';
 
-function addToCart(name, price) {
+function addToCart(name, price, cat) {
+  cat = cat || 'beverage';
   const existing = cart.find(i => i.name === name);
   if (existing) {
     existing.qty++;
   } else {
-    cart.push({ name, price, qty: 1 });
+    cart.push({ name, price, qty: 1, cat: cat });
   }
   renderCart();
   showToast(name + ' ditambahkan ✓');
+}
+
+/* apakah keranjang berisi food & snack? (untuk aturan outlet) */
+function cartHasFood() {
+  return cart.some(i => i.cat === 'food');
 }
 
 function removeFromCart(name) {
@@ -1969,11 +1954,14 @@ function renderCart() {
         <div class="qty-controls">
           <button class="qty-btn" onclick="removeFromCart('${item.name}')">−</button>
           <span class="qty-num">${item.qty}</span>
-          <button class="qty-btn" onclick="addToCart('${item.name}', ${item.price})">+</button>
+          <button class="qty-btn" onclick="addToCart('${item.name}', ${item.price}, '${item.cat || 'beverage'}')">+</button>
         </div>
       </div>`;
     body.appendChild(d);
   });
+
+  // refresh outlet availability (food → Ratulangi only)
+  if (orderType === 'pickup') renderOutletButtons();
 }
 
 function toggleCart() {
@@ -1984,10 +1972,45 @@ function toggleCart() {
 /* ============================================================
    ORDER TYPE
    ============================================================ */
+var _orderOutlet = null; // nomor WA outlet terpilih untuk pickup
+
 function setOrderType(type) {
   orderType = type;
-  document.getElementById('pickupBtn').classList.toggle('active', type === 'pickup');
-  document.getElementById('deliveryBtn').classList.toggle('active', type === 'delivery');
+  var pb = document.getElementById('pickupBtn'), db = document.getElementById('deliveryBtn');
+  if (pb) pb.classList.toggle('active', type === 'pickup');
+  if (db) db.classList.toggle('active', type === 'delivery');
+  var outletRow = document.getElementById('cartOutletRow');
+  var delNote = document.getElementById('cartDeliveryNote');
+  if (outletRow) outletRow.style.display = type === 'pickup' ? 'block' : 'none';
+  if (delNote) delNote.style.display = type === 'delivery' ? 'block' : 'none';
+  if (type === 'pickup') renderOutletButtons();
+}
+
+/* Bangun tombol outlet. Food & Snack → hanya Ratulangi. Minuman → dua outlet. */
+function renderOutletButtons() {
+  var wrap = document.getElementById('cartOutletBtns');
+  var hint = document.getElementById('cartOutletHint');
+  if (!wrap) return;
+  var onlyRatulangi = cartHasFood();
+  var outlets = onlyRatulangi
+    ? [{ label: 'Ratulangi', num: CONFIG.OUTLET_RATULANGI }]
+    : [{ label: 'Pettarani', num: CONFIG.OUTLET_PETTARANI }, { label: 'Ratulangi', num: CONFIG.OUTLET_RATULANGI }];
+  // pertahankan pilihan jika masih valid, kalau tidak pilih pertama
+  if (!outlets.some(function(o) { return o.num === _orderOutlet; })) _orderOutlet = outlets[0].num;
+  wrap.innerHTML = '';
+  outlets.forEach(function(o) {
+    var b = document.createElement('button');
+    b.className = 'order-type-choice' + (o.num === _orderOutlet ? ' active' : '');
+    b.type = 'button';
+    b.textContent = '📍 ' + o.label;
+    b.onclick = function() { selectOutlet(o.num); };
+    wrap.appendChild(b);
+  });
+  if (hint) hint.textContent = onlyRatulangi ? 'Food & Snack hanya tersedia di Outlet Ratulangi.' : '';
+}
+function selectOutlet(num) {
+  _orderOutlet = num;
+  renderOutletButtons();
 }
 
 function syncHeroToggle(type) {
@@ -2000,90 +2023,41 @@ function syncHeroToggle(type) {
    CHECKOUT — kirim order ke WhatsApp
    ============================================================ */
 /* Build the full order message from the cart (used by WA send) */
-function buildOrderMessage(paid) {
+/* Susun pesan WhatsApp otomatis dari isi keranjang */
+function buildOrderMessage(type) {
   const lines = cart.map(i => `• ${i.name} x${i.qty} — Rp ${(i.price * i.qty).toLocaleString('id-ID')}`).join('\n');
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const tipeOrder = orderType === 'pickup'
-    ? `Pickup (ambil di toko, estimasi ${CONFIG.PICKUP_TIME})`
-    : 'Delivery (mohon info ongkir & alamat)';
-  const payLine = paid
-    ? `Saya sudah bayar via QRIS — bukti transfer saya lampirkan di chat ini. 🙏`
-    : `Mohon info pembayaran (QRIS / transfer).`;
+  let tipe, penutup;
+  if (type === 'delivery') {
+    tipe = `Delivery via ${CONFIG.DELIVERY_NAME}`;
+    penutup = `Tolong antar pesanan ini ya. Alamat lengkap saya:\n[tulis alamat di sini]\n\nMohon info ongkirnya. Terima kasih! 🛵`;
+  } else {
+    const outletName = (_orderOutlet === CONFIG.OUTLET_RATULANGI) ? 'Ratulangi' : 'Pettarani';
+    tipe = `Pickup di Outlet ${outletName} (estimasi ${CONFIG.PICKUP_TIME})`;
+    penutup = `Saya akan ambil langsung di outlet. Terima kasih! ☕`;
+  }
   return `Halo ${CONFIG.BRAND_NAME}! Saya ingin order:\n\n` +
     `${lines}\n\n` +
     `Total: Rp ${total.toLocaleString('id-ID')}\n` +
-    `Tipe: ${tipeOrder}\n\n` +
-    `${payLine}\n` +
-    `Terima kasih! ☕`;
+    `Tipe: ${tipe}\n\n` +
+    `${penutup}`;
 }
 
-/* Checkout → open the QRIS payment modal */
+/* Checkout → langsung ke WhatsApp. Pickup → outlet terpilih; Delivery → JAYARAYA DELIVERY */
 function checkout() {
-  if (!cart.length) {
-    showToast('Tambahin menu dulu ya!');
-    return;
+  if (!cart.length) { showToast('Tambahin menu dulu ya!'); return; }
+  let num;
+  if (orderType === 'delivery') {
+    num = CONFIG.DELIVERY_NUMBER;
+  } else {
+    if (!_orderOutlet) _orderOutlet = cartHasFood() ? CONFIG.OUTLET_RATULANGI : CONFIG.OUTLET_PETTARANI;
+    num = _orderOutlet;
   }
-  openPayModal();
-}
-
-var _payOutlet = null, _payOpen = false, _payTrigger = null;
-
-function selectPayOutlet(btn, num) {
-  _payOutlet = num;
-  document.querySelectorAll('.pay-outlet-btn').forEach(function(b) { b.classList.remove('active'); });
-  if (btn) btn.classList.add('active');
-}
-
-function openPayModal() {
-  var modal = document.getElementById('payModal');
-  if (!modal) return;
-  _payTrigger = document.activeElement;
-  // summary
-  var sum = document.getElementById('paySummary');
-  var total = cart.reduce(function(s, i) { return s + i.price * i.qty; }, 0);
-  sum.innerHTML = cart.map(function(i) {
-    return '<div class="pay-line"><span>' + i.name + ' <b>x' + i.qty + '</b></span><span>Rp ' + (i.price * i.qty).toLocaleString('id-ID') + '</span></div>';
-  }).join('');
-  document.getElementById('payTotal').textContent = 'Rp ' + total.toLocaleString('id-ID');
-  // default outlet
-  _payOutlet = CONFIG.WA_NUMBER;
-  var obtns = document.querySelectorAll('.pay-outlet-btn');
-  obtns.forEach(function(b, i) { b.classList.toggle('active', i === 0); });
-  // close cart panel behind, open modal
-  modal.classList.add('open');
-  document.body.style.overflow = 'hidden';
-  _payOpen = true;
-  var cb = document.getElementById('payClose');
-  if (cb) cb.focus();
-}
-function closePayModal() {
-  var modal = document.getElementById('payModal');
-  if (modal) modal.classList.remove('open');
-  document.body.style.overflow = '';
-  _payOpen = false;
-  if (_payTrigger && _payTrigger.focus) { try { _payTrigger.focus(); } catch (e) {} }
-}
-/* Send the order (and payment note) to the selected outlet's WhatsApp */
-function sendOrderWA(paid) {
-  if (!cart.length) { showToast('Keranjang kosong'); return; }
-  var num = _payOutlet || CONFIG.WA_NUMBER;
-  var message = encodeURIComponent(buildOrderMessage(paid));
-  closePayModal();
+  const message = encodeURIComponent(buildOrderMessage(orderType));
   showToast('Membuka WhatsApp...');
   setTimeout(function() {
     window.open('https://wa.me/' + num + '?text=' + message, '_blank');
   }, 500);
-}
-function initPayModal() {
-  var modal = document.getElementById('payModal');
-  if (!modal) return;
-  var bd = document.getElementById('payBackdrop');
-  if (bd) bd.onclick = closePayModal;
-  var cb = document.getElementById('payClose');
-  if (cb) cb.onclick = closePayModal;
-  document.addEventListener('keydown', function(e) {
-    if (_payOpen && e.key === 'Escape') closePayModal();
-  });
 }
 
 /* ============================================================
@@ -2091,7 +2065,7 @@ function initPayModal() {
    ============================================================ */
 function waOrderMerch() {
   const message = encodeURIComponent(
-    `Halo ${CONFIG.BRAND_NAME}! Saya tertarik dengan merchandise Jayaraya.\n` +
+    `Halo ${CONFIG.BRAND_NAME}! Saya tertarik dengan merchandise JAYARAYA.\n` +
     `Boleh minta info ketersediaan, ukuran, dan cara pembayarannya?\n` +
     `Terima kasih! 🧡`
   );
@@ -2391,9 +2365,9 @@ function fmtPriceDisplay(prices, labels) {
 }
 
 /* ── variant state ── */
-let _mvName = '', _mvPrices = [], _mvLabels = [];
-function openMenuVariant(name, prices, labels) {
-  _mvName = name; _mvPrices = prices; _mvLabels = labels;
+let _mvName = '', _mvPrices = [], _mvLabels = [], _mvCat = 'beverage';
+function openMenuVariant(name, prices, labels, cat) {
+  _mvName = name; _mvPrices = prices; _mvLabels = labels; _mvCat = cat || 'beverage';
   document.getElementById('mvItemName').textContent = name;
   const opts = document.getElementById('mvOpts');
   opts.innerHTML = '';
@@ -2403,7 +2377,7 @@ function openMenuVariant(name, prices, labels) {
     btn.className = 'menu-variant-opt';
     btn.innerHTML = '<span class="vopt-lbl">' + labels[i] + '</span><span class="vopt-price">' + fmtPrice(p) + 'k</span>';
     btn.onclick = function() {
-      addToCart(name + ' (' + labels[i] + ')', p);
+      addToCart(name + ' (' + labels[i] + ')', p, _mvCat);
       closeMenuVariant();
     };
     opts.appendChild(btn);
@@ -2487,19 +2461,20 @@ function renderMenuRows(container, group) {
       addBtn.textContent = '+';
       addBtn.setAttribute('aria-label', 'Tambah ' + item.name);
 
+      var cat = group.id; // 'beverage' atau 'food'
       if (item.prices) {
         var ha = item.prices[0], ic = item.prices[1];
         pr.innerHTML = fmtPriceDisplay(item.prices, group.priceLabels);
         if (ha && ic) {
-          addBtn.onclick = function(e) { e.stopPropagation(); openMenuVariant(item.name, item.prices, group.priceLabels); };
+          addBtn.onclick = function(e) { e.stopPropagation(); openMenuVariant(item.name, item.prices, group.priceLabels, cat); };
         } else if (ha) {
-          addBtn.onclick = function() { addToCart(item.name + ' (Hot)', ha); };
+          addBtn.onclick = function() { addToCart(item.name + ' (Hot)', ha, cat); };
         } else {
-          addBtn.onclick = function() { addToCart(item.name + ' (Ice)', ic); };
+          addBtn.onclick = function() { addToCart(item.name + ' (Ice)', ic, cat); };
         }
       } else {
         pr.textContent = fmtPrice(item.price) + 'k';
-        addBtn.onclick = function() { addToCart(item.name, item.price); };
+        addBtn.onclick = function() { addToCart(item.name, item.price, cat); };
       }
 
       row.appendChild(pr);
@@ -2729,7 +2704,7 @@ function initCommunityModal() {
 const merchandiseData = [
   {
     id: 'tumbler',
-    name: 'Jayaraya Tumbler',
+    name: 'JAYARAYA Tumbler',
     tag: 'JYRY Club',
     sub: 'Stainless steel 500ml. Tetap dingin 24 jam, tetap panas 12 jam. Cocok untuk perjalanan panjang.',
     price: 185000,
@@ -2755,9 +2730,9 @@ const merchandiseData = [
   },
   {
     id: 'totebag',
-    name: 'Jayaraya Totebag',
+    name: 'JAYARAYA Totebag',
     tag: 'JYRY Club',
-    sub: 'Heavy canvas 400gsm. Natural tan dengan bordir logo Jayaraya. Limited edition.',
+    sub: 'Heavy canvas 400gsm. Natural tan dengan bordir logo JAYARAYA. Limited edition.',
     price: 95000,
     variants: [
       { label: 'Natural', value: 'Natural' },
@@ -2870,26 +2845,11 @@ function buildMerchandiseEditorial() {
       infoCol.appendChild(vrow);
     }
 
-    // CTA
-    var ctaRow = document.createElement('div');
-    ctaRow.className = 'merch-cta-row';
-    var ctaAdd = document.createElement('button');
-    ctaAdd.className = 'merch-cta-add';
-    ctaAdd.textContent = '+ Tambah ke Cart';
-    ctaAdd.onclick = (function(p) {
-      return function() {
-        var sel = _merchSelected[p.id];
-        var varLabel = (p.variants && p.variants.length > 0) ? ' · ' + p.variants[sel.variantIdx].label : '';
-        addToCart(p.name + varLabel, p.price);
-      };
-    })(prod);
-    var ctaWa = document.createElement('button');
-    ctaWa.className = 'merch-cta-wa';
-    ctaWa.textContent = 'Chat WhatsApp';
-    ctaWa.onclick = function() { waOrderMerch(); };
-    ctaRow.appendChild(ctaAdd);
-    ctaRow.appendChild(ctaWa);
-    infoCol.appendChild(ctaRow);
+    // Offline-only notice (no checkout — pemesanan langsung di outlet)
+    var note = document.createElement('div');
+    note.className = 'merch-offline-note';
+    note.innerHTML = '<span class="merch-offline-dot"></span>Pemesanan merchandise hanya dilakukan melalui <b>offline store</b>.';
+    infoCol.appendChild(note);
 
     // Details
     if (prod.details && prod.details.length > 0) {
@@ -2954,7 +2914,7 @@ function syncMenuToggle(type) {
 document.addEventListener('DOMContentLoaded', function() {
   buildTypographicMenu();
   initMenuModal();
-  initPayModal();
+  setOrderType('pickup');
   buildCommunityGrid();
   buildMerchandiseEditorial();
   initCommunityModal();
@@ -3095,7 +3055,7 @@ const storyPhotoPaths = [
   'Assets/Story/01.jpg','Assets/Story/02.jpg','Assets/Story/03.jpg',
   'Assets/Story/04.jpg','Assets/Story/05.jpg','Assets/Story/06.jpg',
   'Assets/Story/07.jpg','Assets/Story/08.jpg','Assets/Story/09.jpg',
-  'Assets/Story/010.jpg','Assets/Story/011.jpg','Assets/Story/012.jpg',
+  'Assets/Story/010.jpg','Assets/Story/011.jpg',
   'Assets/Story/013.jpg','Assets/Story/014.jpg','Assets/Story/015.jpg',
   'Assets/Story/016.jpg'
 ];
@@ -3117,7 +3077,7 @@ function buildStoryFilm() {
       img.src = src;
       img.loading = 'lazy';
       img.decoding = 'async';
-      img.alt = 'Jayaraya Story';
+      img.alt = 'JAYARAYA Story';
       img.onerror = function() { this.style.display = 'none'; };
       track.appendChild(img);
     });
@@ -3143,7 +3103,7 @@ const communityActivities = [
     title: 'Stand Up Indo Night',
     category: 'Event',
     date: 'Maret 2026',
-    desc: 'Malam penuh tawa dan energi bersama komunitas komedi Makassar di Jayaraya Ratulangi.',
+    desc: 'Malam penuh tawa dan energi bersama komunitas komedi Makassar di JAYARAYA Ratulangi.',
     cover: 'Assets/Komunitas/Standupindo/01.jpg',
     photos: [
       'Assets/Komunitas/Standupindo/01.jpg','Assets/Komunitas/Standupindo/02.jpg',
@@ -3164,7 +3124,7 @@ const communityActivities = [
     title: 'Sepedain Makassar',
     category: 'Kolaborasi',
     date: 'Maret 2026',
-    desc: 'Gowes bareng komunitas Sepedain — dari jalanan kota sampai secangkir kopi di Jayaraya.',
+    desc: 'Gowes bareng komunitas Sepedain — dari jalanan kota sampai secangkir kopi di JAYARAYA.',
     cover: 'Assets/Komunitas/Sepedain/01.jpg',
     photos: [
       'Assets/Komunitas/Sepedain/01.jpg','Assets/Komunitas/Sepedain/02.jpg',
@@ -3208,7 +3168,7 @@ function submitBoothForm(e) {
   var tipe = f.querySelector('[name="tipe"]').value;
   var catatan = f.querySelector('[name="catatan"]').value;
 
-  var msg = 'Halo Jayaraya! Saya ingin mendaftar kolaborasi booth.\n\n' +
+  var msg = 'Halo JAYARAYA! Saya ingin mendaftar kolaborasi booth.\n\n' +
     '👤 Nama/Organisasi: ' + nama + '\n' +
     '📅 Nama Event: ' + event + '\n' +
     '🗓 Tanggal: ' + tanggal + '\n' +
@@ -3763,10 +3723,21 @@ setTimeout(function() {
 .merch-gallery-col{display:flex;flex-direction:column;gap:12px}
 .merch-hero-frame{aspect-ratio:3/4;overflow:hidden;border-radius:16px;position:relative;background:radial-gradient(120% 90% at 50% 20%,#26221e 0%,var(--bk2) 70%);cursor:pointer;clip-path:inset(9% round 16px);opacity:0;transform:translateY(20px);transition:clip-path .95s cubic-bezier(.16,1,.3,1),opacity .7s ease,transform .8s cubic-bezier(.16,1,.3,1)}
 .merch-product.revealed .merch-hero-frame,.merch-product.visible .merch-hero-frame{clip-path:inset(0 round 16px);opacity:1;transform:translateY(0)}
-.merch-hero-frame img{width:100%;height:100%;object-fit:contain;transition:opacity .35s,transform .5s cubic-bezier(.16,1,.3,1);display:block}
+.merch-hero-frame img{width:100%;height:100%;object-fit:contain;transition:opacity .35s;display:block}
 .merch-hero-frame.is-cover img{object-fit:cover}
-.merch-hero-frame:hover img{transform:scale(1.03)}
-@media(prefers-reduced-motion:reduce){.merch-hero-frame{clip-path:none;opacity:1;transform:none}}
+/* showcase: gentle ken-burns drift, pause on hover; sheen on hover */
+.merch-product.revealed .merch-hero-frame img,.merch-product.visible .merch-hero-frame img{animation:merchKen 18s ease-in-out infinite alternate}
+@keyframes merchKen{0%{transform:scale(1) translateY(0)}100%{transform:scale(1.06) translateY(-1.5%)}}
+.merch-hero-frame:hover img{animation-play-state:paused}
+.merch-hero-frame::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.06) 50%,transparent 65%);transform:translateX(-60%);opacity:0;transition:opacity .3s}
+.merch-hero-frame:hover::after{opacity:1;animation:merchSheen 1.1s ease forwards}
+@keyframes merchSheen{to{transform:translateX(60%)}}
+@media(prefers-reduced-motion:reduce){.merch-hero-frame{clip-path:none;opacity:1;transform:none}.merch-hero-frame img{animation:none}}
+/* offline-only notice */
+.merch-offline-note{display:flex;align-items:center;gap:11px;font:600 13.5px/1.5 'Manrope',sans-serif;color:var(--gyl);background:rgba(217,90,43,.08);border:1px solid rgba(217,90,43,.3);border-radius:14px;padding:14px 16px;margin-bottom:22px}
+.merch-offline-note b{color:var(--or);font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.merch-offline-dot{width:9px;height:9px;border-radius:50%;background:var(--or);flex-shrink:0;animation:merchPulse 2s ease-in-out infinite}
+@keyframes merchPulse{0%,100%{box-shadow:0 0 0 3px rgba(217,90,43,.22)}50%{box-shadow:0 0 0 7px rgba(217,90,43,.05)}}
 .merch-thumb-rail{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .merch-thumb-rail::-webkit-scrollbar{display:none}
 .merch-thumb{width:72px;height:72px;flex-shrink:0;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s,opacity .2s;opacity:.55}
@@ -4102,7 +4073,7 @@ setTimeout(function() {
 <div id="cms-overlay">
   <div id="cms-panel">
     <div id="cms-hd">
-      <div class="cms-hd-l"><div class="cms-hd-dot"></div><div><div class="cms-hd-title">Jayaraya Admin Panel</div><div class="cms-hd-sub">Perubahan tersimpan di browser ini</div></div></div>
+      <div class="cms-hd-l"><div class="cms-hd-dot"></div><div><div class="cms-hd-title"><b>JAYARAYA</b> Admin Panel</div><div class="cms-hd-sub">Perubahan tersimpan di browser ini</div></div></div>
       <button id="cms-x" onclick="cmsClose()">✕</button>
     </div>
     <div class="cms-tabs">
@@ -4262,7 +4233,7 @@ setTimeout(function() {
           <div class="cf"><label class="cl">Saudara Kurir</label><input class="ci" id="k4" placeholder="62895385224976" type="tel"></div></div>
         </div>
         <div class="cs"><div class="cs-title">Media Sosial</div>
-          <div class="cr"><div class="cf"><label class="cl">IG Jayaraya</label><input class="ci" id="ig1" placeholder="jayarayacoffee"></div>
+          <div class="cr"><div class="cf"><label class="cl">IG <b>JAYARAYA</b></label><input class="ci" id="ig1" placeholder="jayarayacoffee"></div>
           <div class="cf"><label class="cl">IG JYRY Club</label><input class="ci" id="ig2" placeholder="jyry.club"></div></div>
         </div>
         <div class="cs"><div class="cs-title">Alamat</div>
@@ -4460,7 +4431,7 @@ function cmsApply() {
   }
   if (D.hero_desc) {
     const el = document.querySelector('[data-cms="hero-desc"]');
-    if (el) el.innerHTML = `<strong>Jayaraya</strong> ${D.hero_desc}`;
+    if (el) el.innerHTML = `<strong>JAYARAYA</strong> ${D.hero_desc}`;
   }
   if (D.story_opening) {
     const el = document.querySelector('[data-cms="story-opening"]');
