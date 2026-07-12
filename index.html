@@ -662,8 +662,16 @@ footer { background: var(--bk2); padding: 72px 5% 40px; border-top: 1px solid va
 .cart-outlet { margin-bottom: 14px; }
 .cart-outlet .order-type-btns { margin-bottom: 6px; }
 .cart-outlet-hint { font-size: 11px; line-height: 1.4; color: var(--or); font-weight: 600; }
-.cart-delivery-note { display: none; font-size: 12px; line-height: 1.5; color: var(--gyl); background: rgba(217,90,43,.08); border: 1px solid rgba(217,90,43,.25); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.cart-delivery-note { display: none; font-size: 12px; line-height: 1.5; color: var(--gyl); background: rgba(217,90,43,.08); border: 1px solid rgba(217,90,43,.25); border-radius: 12px; padding: 14px; margin-bottom: 16px; }
 .cart-delivery-note b { color: var(--or); }
+.cart-delivery-head { font-weight: 700; color: var(--wh); margin-bottom: 10px; }
+.cart-addr-label { display: block; font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gy); margin-bottom: 6px; }
+.cart-addr-input { width: 100%; box-sizing: border-box; resize: vertical; min-height: 52px; background: var(--bk); border: 1px solid var(--gl); border-radius: 10px; padding: 10px 12px; color: var(--wh); font-family: 'Manrope', sans-serif; font-size: 13px; line-height: 1.45; transition: border-color .2s; }
+.cart-addr-input:focus { outline: none; border-color: var(--or); }
+.cart-addr-input::placeholder { color: rgba(184,176,168,.4); }
+.cart-addr-hint { font-size: 11px; font-weight: 600; color: var(--or); margin-top: 6px; }
+.checkout-btn.is-disabled { background: var(--bk3); color: var(--gy); cursor: not-allowed; transform: none; }
+.checkout-btn.is-disabled:hover { background: var(--bk3); transform: none; }
 .menu-hdr-hint { font-size: 12px; font-weight: 600; color: var(--gy); background: var(--bk2); border: 1px solid var(--gl); border-radius: 100px; padding: 9px 16px; white-space: nowrap; }
 .cart-total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .cart-total-label { font-size: 12px; font-weight: 700; color: var(--gy); letter-spacing: .5px; text-transform: uppercase; }
@@ -1237,8 +1245,13 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
       <div class="order-type-btns" id="cartOutletBtns"></div>
       <div class="cart-outlet-hint" id="cartOutletHint"></div>
     </div>
-    <!-- Catatan Delivery -->
-    <div class="cart-delivery-note" id="cartDeliveryNote">🛵 Diantar via <b>JAYARAYA DELIVERY</b>. Alamat &amp; ongkir dikonfirmasi lewat WhatsApp.</div>
+    <!-- Catatan + input alamat Delivery -->
+    <div class="cart-delivery-note" id="cartDeliveryNote">
+      <div class="cart-delivery-head">🛵 Diantar via <b>JAYARAYA DELIVERY</b></div>
+      <label class="cart-addr-label" for="cartAddress">Alamat lengkap pengantaran</label>
+      <textarea id="cartAddress" class="cart-addr-input" rows="2" placeholder="Contoh: Jl. Contoh No. 10, Kel. ..., Maros — patokan: dekat ..." oninput="updateCheckoutState()"></textarea>
+      <div class="cart-addr-hint" id="cartAddrHint">Isi alamat dulu untuk lanjut pesan.</div>
+    </div>
     <div class="cart-total-row">
       <span class="cart-total-label">Total</span>
       <span class="cart-total-num" id="cartTotal">Rp 0</span>
@@ -1962,6 +1975,7 @@ function renderCart() {
 
   // refresh outlet availability (food → Ratulangi only)
   if (orderType === 'pickup') renderOutletButtons();
+  updateCheckoutState();
 }
 
 function toggleCart() {
@@ -1984,6 +1998,7 @@ function setOrderType(type) {
   if (outletRow) outletRow.style.display = type === 'pickup' ? 'block' : 'none';
   if (delNote) delNote.style.display = type === 'delivery' ? 'block' : 'none';
   if (type === 'pickup') renderOutletButtons();
+  updateCheckoutState();
 }
 
 /* Bangun tombol outlet. Food & Snack → hanya Ratulangi. Minuman → dua outlet. */
@@ -2029,8 +2044,10 @@ function buildOrderMessage(type) {
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
   let tipe, penutup;
   if (type === 'delivery') {
+    const addrEl = document.getElementById('cartAddress');
+    const addr = addrEl ? addrEl.value.trim() : '';
     tipe = `Delivery via ${CONFIG.DELIVERY_NAME}`;
-    penutup = `Tolong antar pesanan ini ya. Alamat lengkap saya:\n[tulis alamat di sini]\n\nMohon info ongkirnya. Terima kasih! 🛵`;
+    penutup = `Tolong antar pesanan ini ya. Alamat lengkap saya:\n${addr}\n\nMohon info ongkirnya. Terima kasih! 🛵`;
   } else {
     const outletName = (_orderOutlet === CONFIG.OUTLET_RATULANGI) ? 'Ratulangi' : 'Pettarani';
     tipe = `Pickup di Outlet ${outletName} (estimasi ${CONFIG.PICKUP_TIME})`;
@@ -2043,9 +2060,29 @@ function buildOrderMessage(type) {
     `${penutup}`;
 }
 
+/* Aktif/nonaktifkan tombol checkout (Delivery butuh alamat terisi) */
+function deliveryAddressFilled() {
+  var el = document.getElementById('cartAddress');
+  return !!(el && el.value.trim().length >= 6);
+}
+function updateCheckoutState() {
+  var btn = document.querySelector('.checkout-btn');
+  if (!btn) return;
+  var blocked = (orderType === 'delivery' && !deliveryAddressFilled());
+  btn.disabled = blocked;
+  btn.classList.toggle('is-disabled', blocked);
+  var hint = document.getElementById('cartAddrHint');
+  if (hint) hint.style.display = (orderType === 'delivery' && !deliveryAddressFilled()) ? 'block' : 'none';
+}
+
 /* Checkout → langsung ke WhatsApp. Pickup → outlet terpilih; Delivery → JAYARAYA DELIVERY */
 function checkout() {
   if (!cart.length) { showToast('Tambahin menu dulu ya!'); return; }
+  if (orderType === 'delivery' && !deliveryAddressFilled()) {
+    showToast('Isi alamat pengantaran dulu ya');
+    var el = document.getElementById('cartAddress'); if (el) el.focus();
+    return;
+  }
   let num;
   if (orderType === 'delivery') {
     num = CONFIG.DELIVERY_NUMBER;
@@ -2706,7 +2743,9 @@ const merchandiseData = [
     id: 'tumbler',
     name: 'JAYARAYA Tumbler',
     tag: 'JYRY Club',
-    sub: 'Stainless steel 500ml. Tetap dingin 24 jam, tetap panas 12 jam. Cocok untuk perjalanan panjang.',
+    sub: 'Teman setia dari meja kerja sampai perjalanan jauh.',
+    story: 'Dibuat untuk kamu yang selalu bergerak — kopi favoritmu tetap pada suhunya, di mana pun harimu berlanjut.',
+    benefits: ['Panas 12 jam, dingin 24 jam', 'Anti bocor & bebas BPA', 'Pas di cup holder mobil'],
     price: 185000,
     variants: [
       { label: 'Hitam', value: 'Hitam' },
@@ -2732,7 +2771,9 @@ const merchandiseData = [
     id: 'totebag',
     name: 'JAYARAYA Totebag',
     tag: 'JYRY Club',
-    sub: 'Heavy canvas 400gsm. Natural tan dengan bordir logo JAYARAYA. Limited edition.',
+    sub: 'Kanvas tebal yang makin berkarakter seiring waktu.',
+    story: 'Satu tas untuk kerja, ngampus, dan nongkrong — makin sering dipakai, makin punya cerita bareng kamu.',
+    benefits: ['Kanvas 400gsm kuat', 'Muat laptop 14 inci', 'Bordir logo, bukan sablon'],
     price: 95000,
     variants: [
       { label: 'Natural', value: 'Natural' },
@@ -2762,116 +2803,46 @@ function buildMerchandiseEditorial() {
   container.innerHTML = '';
 
   merchandiseData.forEach(function(prod) {
-    _merchSelected[prod.id] = { variantIdx: 0, photoIdx: 0 };
+    var el = document.createElement('div');
+    el.className = 'merch-story fade-up' + (prod.reverse ? ' reverse' : '');
 
-    var productEl = document.createElement('div');
-    productEl.className = 'merch-product fade-up' + (prod.reverse ? ' reverse' : '');
-
-    // Gallery col
-    var galleryCol = document.createElement('div');
-    galleryCol.className = 'merch-gallery-col';
-
-    var heroFrame = document.createElement('div');
-    heroFrame.className = 'merch-hero-frame';
-    var heroImg = document.createElement('img');
-    heroImg.src = prod.photos[0];
-    heroImg.alt = prod.name;
-    heroImg.loading = 'lazy';
-    heroImg.decoding = 'async';
-    heroImg.id = 'merch-hero-' + prod.id;
-    heroImg.onerror = function() { this.parentElement.style.background = 'var(--bk3)'; };
-    heroImg.onload = function() { applyMerchFit(this); };
-    heroFrame.appendChild(heroImg);
-    galleryCol.appendChild(heroFrame);
-
-    if (prod.photos.length > 1) {
-      var rail = document.createElement('div');
-      rail.className = 'merch-thumb-rail';
-      prod.photos.forEach(function(p, pi) {
-        var th = document.createElement('div');
-        th.className = 'merch-thumb' + (pi === 0 ? ' active' : '');
-        th.id = 'merch-thumb-' + prod.id + '-' + pi;
-        var ti = document.createElement('img');
-        ti.src = p; ti.alt = '';
-        th.appendChild(ti);
-        th.onclick = (function(prodId, photoIndex) {
-          return function() {
-            selectMerchPhoto(prodId, photoIndex);
-          };
-        })(prod.id, pi);
-        rail.appendChild(th);
-      });
-      galleryCol.appendChild(rail);
-      var counter = document.createElement('div');
-      counter.className = 'merch-img-counter';
-      counter.id = 'merch-counter-' + prod.id;
-      counter.textContent = '1 / ' + prod.photos.length;
-      galleryCol.appendChild(counter);
-    }
-
-    // Info col
-    var infoCol = document.createElement('div');
-    infoCol.className = 'merch-info-col';
-
-    var priceF = 'Rp ' + prod.price.toLocaleString('id-ID');
-    infoCol.innerHTML = '<div class="merch-product-tag">' + prod.tag + '</div>' +
+    // ── Story text ──
+    var text = document.createElement('div');
+    text.className = 'merch-story-text';
+    var benefits = (prod.benefits || []).map(function(b) { return '<li>' + b + '</li>'; }).join('');
+    var chips = (prod.variants || []).map(function(v) { return '<span class="merch-chip">' + v.label + '</span>'; }).join('');
+    text.innerHTML =
+      '<div class="merch-product-tag">' + prod.tag + '</div>' +
       '<div class="merch-product-name">' + prod.name + '</div>' +
-      '<div class="merch-product-sub">' + prod.sub + '</div>' +
-      '<div class="merch-product-price">' + priceF + '</div>';
+      '<p class="merch-story-desc">' + (prod.story || prod.sub || '') + '</p>' +
+      (benefits ? '<ul class="merch-benefits">' + benefits + '</ul>' : '') +
+      (chips ? '<div class="merch-chips"><span class="merch-chips-lbl">Varian</span>' + chips + '</div>' : '') +
+      '<div class="merch-offline-note"><span class="merch-offline-dot"></span>Pemesanan merchandise hanya dilakukan melalui <b>offline store</b>.</div>';
 
-    // Variant buttons
-    if (prod.variants && prod.variants.length > 0) {
-      var vrow = document.createElement('div');
-      vrow.className = 'merch-variant-row';
-      vrow.innerHTML = '<div class="merch-variant-row-lbl">Pilih Varian</div>';
-      var vbtns = document.createElement('div');
-      vbtns.className = 'merch-variant-btns';
-      prod.variants.forEach(function(v, vi) {
-        var vb = document.createElement('button');
-        vb.className = 'merch-vbtn' + (vi === 0 ? ' active' : '');
-        vb.textContent = v.label;
-        vb.id = 'merch-vbtn-' + prod.id + '-' + vi;
-        vb.onclick = (function(prodId, varIdx) {
-          return function() {
-            _merchSelected[prodId].variantIdx = varIdx;
-            document.querySelectorAll('[id^="merch-vbtn-' + prodId + '-"]').forEach(function(b, bi) {
-              b.classList.toggle('active', bi === varIdx);
-            });
-          };
-        })(prod.id, vi);
-        vbtns.appendChild(vb);
-      });
-      vrow.appendChild(vbtns);
-      infoCol.appendChild(vrow);
-    }
+    // ── Overlapping horizontal photo scroll ──
+    var gal = document.createElement('div');
+    gal.className = 'merch-story-gallery';
+    var scroll = document.createElement('div');
+    scroll.className = 'merch-overlap';
+    prod.photos.forEach(function(p, i) {
+      var card = document.createElement('div');
+      card.className = 'merch-oc';
+      var img = document.createElement('img');
+      img.src = p; img.alt = prod.name + ' — ' + (i + 1);
+      img.loading = 'lazy'; img.decoding = 'async';
+      img.onerror = function() { this.parentElement.style.background = 'var(--bk3)'; this.style.display = 'none'; };
+      card.appendChild(img);
+      scroll.appendChild(card);
+    });
+    gal.appendChild(scroll);
+    var hint = document.createElement('div');
+    hint.className = 'merch-scroll-hint';
+    hint.innerHTML = '<span>&#8592; geser untuk lihat semua &#8594;</span>';
+    gal.appendChild(hint);
 
-    // Offline-only notice (no checkout — pemesanan langsung di outlet)
-    var note = document.createElement('div');
-    note.className = 'merch-offline-note';
-    note.innerHTML = '<span class="merch-offline-dot"></span>Pemesanan merchandise hanya dilakukan melalui <b>offline store</b>.';
-    infoCol.appendChild(note);
-
-    // Details
-    if (prod.details && prod.details.length > 0) {
-      var detEl = document.createElement('div');
-      detEl.className = 'merch-details';
-      prod.details.forEach(function(d) {
-        var dr = document.createElement('div');
-        dr.className = 'merch-detail-row';
-        dr.innerHTML = '<span>' + d[0] + '</span><span>' + d[1] + '</span>';
-        detEl.appendChild(dr);
-      });
-      infoCol.appendChild(detEl);
-    }
-
-    if (prod.reverse) {
-      productEl.appendChild(infoCol);
-      productEl.appendChild(galleryCol);
-    } else {
-      productEl.appendChild(galleryCol);
-      productEl.appendChild(infoCol);
-    }
-    container.appendChild(productEl);
+    if (prod.reverse) { el.appendChild(text); el.appendChild(gal); }
+    else { el.appendChild(gal); el.appendChild(text); }
+    container.appendChild(el);
   });
 }
 
@@ -3738,6 +3709,40 @@ setTimeout(function() {
 .merch-offline-note b{color:var(--or);font-weight:800;text-transform:uppercase;letter-spacing:.3px}
 .merch-offline-dot{width:9px;height:9px;border-radius:50%;background:var(--or);flex-shrink:0;animation:merchPulse 2s ease-in-out infinite}
 @keyframes merchPulse{0%,100%{box-shadow:0 0 0 3px rgba(217,90,43,.22)}50%{box-shadow:0 0 0 7px rgba(217,90,43,.05)}}
+
+/* ── Merch editorial showcase (overlapping scroll, no price) ── */
+.merch-story{display:grid;grid-template-columns:1.05fr 0.95fr;gap:52px;align-items:center;padding:66px 6%;border-top:1px solid var(--gl)}
+.merch-story:first-of-type{border-top:none;padding-top:24px}
+.merch-story-text{max-width:480px}
+.merch-story-desc{font:400 15.5px/1.7 'Manrope',sans-serif;color:var(--gyl);margin:16px 0 22px}
+.merch-benefits{list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:11px}
+.merch-benefits li{position:relative;padding-left:28px;font:600 14.5px/1.4 'Manrope',sans-serif;color:var(--wh)}
+.merch-benefits li::before{content:'';position:absolute;left:0;top:2px;width:17px;height:17px;border-radius:50%;background:var(--or);}
+.merch-benefits li::after{content:'✓';position:absolute;left:4px;top:1px;color:#fff;font-size:11px;font-weight:800}
+.merch-chips{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.merch-chips-lbl{font:700 10px/1 'Manrope',sans-serif;letter-spacing:2px;text-transform:uppercase;color:var(--gy);margin-right:2px}
+.merch-chip{font:700 12px/1 'Manrope',sans-serif;padding:9px 15px;border:1px solid var(--gl);border-radius:100px;color:var(--gyl)}
+/* overlapping horizontal photo scroll */
+.merch-story-gallery{position:relative;min-width:0}
+.merch-overlap{display:flex;align-items:center;overflow-x:auto;padding:34px 34px 34px 6px;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.merch-overlap::-webkit-scrollbar{display:none}
+.merch-oc{flex:0 0 auto;width:min(64%,250px);aspect-ratio:3/4;border-radius:16px;overflow:hidden;background:var(--bk3);border:1px solid rgba(255,255,255,.06);box-shadow:0 24px 55px rgba(0,0,0,.45);scroll-snap-align:center;transition:transform .5s cubic-bezier(.16,1,.3,1),margin .5s cubic-bezier(.16,1,.3,1),box-shadow .4s}
+.merch-oc + .merch-oc{margin-left:-72px}
+.merch-oc img{width:100%;height:100%;object-fit:cover;display:block}
+/* fan out slightly when hovering the strip; lift the focused card */
+.merch-overlap:hover .merch-oc + .merch-oc{margin-left:2px}
+.merch-oc:hover{transform:translateY(-12px) scale(1.02);box-shadow:0 34px 70px rgba(0,0,0,.55);z-index:4}
+.merch-scroll-hint{margin-top:6px;font:600 10.5px/1 'Manrope',sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--gy);text-align:center}
+@media(max-width:900px){
+  .merch-story{grid-template-columns:1fr;gap:26px;padding:48px 5%}
+  .merch-story.reverse .merch-story-gallery{order:-1}
+  .merch-story-text{max-width:none}
+  .merch-oc{width:min(66%,210px)}
+  .merch-oc + .merch-oc{margin-left:-56px}
+  .merch-overlap{padding:26px 22px 26px 4px}
+}
+@media(prefers-reduced-motion:reduce){.merch-oc{transition:none}}
+
 .merch-thumb-rail{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none}
 .merch-thumb-rail::-webkit-scrollbar{display:none}
 .merch-thumb{width:72px;height:72px;flex-shrink:0;border-radius:10px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:border-color .2s,opacity .2s;opacity:.55}
