@@ -1439,17 +1439,17 @@ footer{background:var(--bk);border-top:1px solid var(--gl);padding:60px 5% 32px}
       <!-- Left: big numbers -->
       <div class="sp-numbers">
         <div class="sp-stat-row">
-          <div class="sp-stat-num" data-stat="3.9K" data-target="3900" data-suffix="K">3.9K</div>
+          <div class="sp-stat-num" data-key="followers" data-stat="7K" data-target="7000" data-suffix="K">7K</div>
           <div class="sp-stat-label">FOLLOWERS INSTAGRAM</div>
         </div>
         <div class="sp-divider"></div>
         <div class="sp-stat-row">
-          <div class="sp-stat-num" data-stat="4.8★" data-target="4.8" data-suffix="★">4.8★</div>
+          <div class="sp-stat-num" data-key="rating" data-stat="4.8★" data-target="4.8" data-suffix="★">4.8★</div>
           <div class="sp-stat-label">GOOGLE RATING</div>
         </div>
         <div class="sp-divider"></div>
         <div class="sp-stat-row">
-          <div class="sp-stat-num" data-stat="72+" data-target="72" data-suffix="+">72+</div>
+          <div class="sp-stat-num" data-key="reviews" data-stat="72+" data-target="72" data-suffix="+">72+</div>
           <div class="sp-stat-label">ULASAN POSITIF</div>
         </div>
       </div>
@@ -3237,6 +3237,50 @@ document.addEventListener('DOMContentLoaded', function() {
     document.addEventListener('DOMContentLoaded', initSPStats);
   } else {
     initSPStats();
+  }
+
+  /* ── LIVE STATS: ambil dari Netlify Function (Google + Instagram).
+        Kalau belum ada kunci API / gagal → angka manual dipertahankan. ── */
+  function fmtFollowers(n) {
+    if (n >= 1000) { var k = n / 1000; return (Math.round(k * 10) / 10) + 'K'; }
+    return '' + n;
+  }
+  function setStatNum(key, display) {
+    var el = document.querySelector('.sp-stat-num[data-key="' + key + '"]');
+    if (!el) return;
+    el.setAttribute('data-stat', display);
+    el.textContent = display; // langsung tampil; count-up akan menyesuaikan saat section discroll
+  }
+  function applyLiveStats(d) {
+    if (!d || typeof d !== 'object') return;
+    if (d.followers) setStatNum('followers', fmtFollowers(d.followers));
+    if (d.rating) setStatNum('rating', (Math.round(d.rating * 10) / 10).toFixed(1) + '★');
+    if (d.reviewsCount) setStatNum('reviews', d.reviewsCount + '+');
+    // anti-race: pastikan nilai akhir benar walau count-up sempat jalan lebih dulu
+    setTimeout(function () {
+      ['followers', 'rating', 'reviews'].forEach(function (k) {
+        var el = document.querySelector('.sp-stat-num[data-key="' + k + '"]');
+        if (el) el.textContent = el.getAttribute('data-stat');
+      });
+    }, 2000);
+    if (d.reviews && d.reviews.length) {
+      var fq = document.querySelector('.sp-featured-quote');
+      var fn = document.querySelector('.sp-featured-name');
+      if (fq) fq.textContent = '"' + d.reviews[0].text + '"';
+      if (fn) fn.textContent = '— ' + d.reviews[0].author;
+      var minis = document.querySelectorAll('.sp-mini');
+      for (var i = 1; i < d.reviews.length && i <= minis.length; i++) {
+        var r = d.reviews[i], m = minis[i - 1];
+        var t = m.querySelector('.sp-mini-text'); if (t) t.textContent = '"' + r.text + '"';
+        var a = m.querySelector('.sp-mini-attr'); if (a) a.textContent = r.author + ' · Google';
+      }
+    }
+  }
+  if (typeof fetch === 'function') {
+    fetch('/.netlify/functions/stats')
+      .then(function(r) { return r && r.ok ? r.json() : null; })
+      .then(applyLiveStats)
+      .catch(function() { /* biarkan angka manual */ });
   }
 })();
 
